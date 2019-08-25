@@ -1,5 +1,5 @@
 
-likert_labeled <- function(ds, mid_level, ranked_levels, group,
+likert_labelled <- function(ds, mid_level, ranked_levels, group,
                            label_minimum = 0.05, group_arrange = 'positive') {
 
   #' Produces likert plots with labels
@@ -13,42 +13,47 @@ likert_labeled <- function(ds, mid_level, ranked_levels, group,
   #' @param label_minimum the proportion for which likert plot will be labelled
   #' @param group_arrange a character of positive (default) or negative
   #' @return None
-  #'
+  #' @examples
+  #' data("country_outlook")
+  #' ranked_levels <- factor(x = c('Much.worse', 'Somewhat.worse', 'Almost.the.same', 'Somewhat.better', 'Much.better'), levels = c('Much.worse', 'Somewhat.worse', 'Almost.the.same', 'Somewhat.better', 'Much.better'))
+  #' mid_level <- 'Almost.the.same'
+  #' group <- 'Country'
+  #' likert_labeled(ds, mid_level, ranked_levels, group)
   #' @export
 
 
-  #---------- Separate the positive and negative responses from the mid-level ----------#
+  #---------- Separates the positive and negative responses from the mid-level ----------#
 
-  ds[ , mid_level] = ds[ , mid_level]/2
-  upper_levels = which(colnames(ds)==mid_level):which(colnames(ds)==last(ranked_levels) )
-  lower_levels = which(colnames(ds)==first(ranked_levels)):which(colnames(ds)==mid_level)
+  ds[ , mid_level] <- ds[ , mid_level]/2
+  upper_levels <- which(colnames(ds)==mid_level):which(colnames(ds)==last(ranked_levels) )
+  lower_levels <- which(colnames(ds)==first(ranked_levels)):which(colnames(ds)==mid_level)
 
-  ds_upper = ds %>% select(Country, upper_levels) %>%
+  ds_upper <- ds %>% select(Country, upper_levels) %>%
     melt(id.var='Country') %>% mutate(value = round(value,2))
 
-  ds_lower = ds %>% select(Country, lower_levels) %>%
+  ds_lower <- ds %>% select(Country, lower_levels) %>%
     melt(id.var='Country') %>% mutate(value = round(value,2))
 
-  ds_upper$variable = fct_rev(ds_upper$variable)
+  ds_upper$variable <- fct_rev(ds_upper$variable)
 
   if(group_arrange == "positive") {
-    ds$sum_for_rank = rowSums(ds[ ,upper_levels])
+    ds$sum_for_rank <- rowSums(ds[ ,upper_levels])
   }
   if(group_arrange == "negative") {
-    ds$sum_for_rank = rowSums(ds[ ,lower_levels])
+    ds$sum_for_rank <- rowSums(ds[ ,lower_levels])
   }
 
-  group_order = ds %>% arrange(sum_for_rank) %>% .$Country
+  group_order <- ds %>% arrange(sum_for_rank) %>% .$Country
   ds_upper[ , group] = factor(ds_upper[ , group], levels = group_order)
   ds_lower[ , group] = factor(ds_lower[ , group], levels = group_order)
 
-  names_lower_levels = colnames(ds[ ,lower_levels])
-  names_upper_levels = colnames(ds[ ,upper_levels])
+  names_lower_levels <- colnames(ds[ ,lower_levels])
+  names_upper_levels <- colnames(ds[ ,upper_levels])
 
 
   #---------- Position the labels ----------#
 
-  n_lags = 1:floor(length(ranked_levels)/2)
+  n_lags <- 1:floor(length(ranked_levels)/2)
 
   lag_names <- paste("lag", formatC(n_lags, width = nchar(max(n_lags)), flag = "0"),
                      sep = "")
