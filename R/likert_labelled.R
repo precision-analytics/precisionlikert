@@ -21,7 +21,6 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
   #' likert_labeled(ds, mid_level, ranked_levels, group)
   #' @export
 
-
   #---------- Separates the positive and negative responses from the mid-level ----------#
 
   ds[ , mid_level] <- ds[ , mid_level]/2
