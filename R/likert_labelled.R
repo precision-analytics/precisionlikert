@@ -1,4 +1,7 @@
 
+
+
+
 likert_labelled <- function(ds, mid_level, ranked_levels, group,
                            label_minimum = 0.05, group_arrange = 'positive') {
 
@@ -17,8 +20,8 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
   #' data("country_outlook")
   #' ranked_levels <- factor(x = c('Much.worse', 'Somewhat.worse', 'Almost.the.same', 'Somewhat.better', 'Much.better'), levels = c('Much.worse', 'Somewhat.worse', 'Almost.the.same', 'Somewhat.better', 'Much.better'))
   #' mid_level <- 'Almost.the.same'
-  #' group <- 'Country'
-  #' likert_labeled(ds, mid_level, ranked_levels, group)
+  #' group <- "Country"
+  #' likert_labelled(ds, mid_level, ranked_levels, group)
   #' @export
 
   #---------- Separates the positive and negative responses from the mid-level ----------#
@@ -27,11 +30,11 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
   upper_levels <- which(colnames(ds)==mid_level):which(colnames(ds)==last(ranked_levels) )
   lower_levels <- which(colnames(ds)==first(ranked_levels)):which(colnames(ds)==mid_level)
 
-  ds_upper <- ds %>% select(Country, upper_levels) %>%
-    melt(id.var='Country') %>% mutate(value = round(value,2))
+  ds_upper <- ds %>% select(!!group, upper_levels) %>%
+    gather(variable, value, -!!group, factor_key = TRUE) %>% mutate(value = round(value,2))
 
-  ds_lower <- ds %>% select(Country, lower_levels) %>%
-    melt(id.var='Country') %>% mutate(value = round(value,2))
+  ds_lower <- ds %>% select(!!group, lower_levels) %>%
+    gather(variable, value, -!!group, factor_key = TRUE) %>% mutate(value = round(value,2))
 
   ds_upper$variable <- fct_rev(ds_upper$variable)
 
@@ -42,7 +45,7 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
     ds$sum_for_rank <- rowSums(ds[ ,lower_levels])
   }
 
-  group_order <- ds %>% arrange(sum_for_rank) %>% .$Country
+  group_order <- ds %>% arrange(sum_for_rank) %>% pull(!!group)
   ds_upper[ , group] = factor(ds_upper[ , group], levels = group_order)
   ds_lower[ , group] = factor(ds_lower[ , group], levels = group_order)
 
@@ -60,14 +63,14 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
   lag_functions <- setNames(paste("dplyr::lag(., ", n_lags, ', default=0',")"), lag_names)
 
 
-  ds_labels_upper <- ds_upper %>% group_by(Country)  %>%
+  ds_labels_upper <- ds_upper %>% group_by(!!sym(group))  %>%
     mutate_at(vars(value), funs_(lag_functions)) %>%
     ungroup() %>%
     mutate(pos  = value/2 + rowSums(select(., contains("lag")))) %>%
     mutate(pos = ifelse(variable == 'Almost.the.same', 0, pos))
 
 
-  ds_labels_lower <-  ds_lower %>% arrange(desc(variable)) %>% group_by(Country)  %>%
+  ds_labels_lower <-  ds_lower %>% arrange(desc(variable)) %>% group_by(!!sym(group))  %>%
     mutate_at(vars(value), funs_(lag_functions)) %>%
     ungroup() %>%
     mutate(pos  = 0 - (value/2 + rowSums(select(., contains("lag"))))) %>%
@@ -88,16 +91,16 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
   #---------- Produce the plot ----------#
 
   g <- ggplot() +
-    geom_bar(data = ds_lower, aes(x = Country, y = -value, fill = variable),
+    geom_bar(data = ds_lower, aes(x = !!sym(group), y = -value, fill = variable),
              position="stack", stat="identity") +
-    geom_bar(data = ds_upper, aes(x = Country, y = value, fill = variable),
+    geom_bar(data = ds_upper, aes(x = !!sym(group), y = value, fill = variable),
             position="stack", stat="identity") +
     coord_flip() + theme_fivethirtyeight() +
     geom_hline(yintercept = 0, color =c("white"))  +
     scale_fill_manual(values = likert_pal,
                       breaks = ranked_levels,
                       name = '') +
-    geom_text(aes(label =  sprintf("%.2f", value), x = Country, y = pos), data = ds_labels)
+    geom_text(aes(label =  sprintf("%.2f", value), x = !!sym(group), y = pos), data = ds_labels); g
 
 return(g)
 }
