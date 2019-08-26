@@ -3,7 +3,7 @@
 
 
 likert_labelled <- function(ds, mid_level, ranked_levels, group,
-                           label_minimum = 0.05, group_arrange = 'positive') {
+                           label_minimum = 0.03, group_arrange = 'positive') {
 
   #' Produces likert plots with labels
   #'
@@ -78,6 +78,7 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
 
 
   ds_labels <- rbind(ds_labels_lower, ds_labels_upper) %>% distinct() %>%
+    mutate(value = ifelse(variable == 'Almost.the.same', value*2, value)) %>%
     filter(value >= label_minimum)
 
 
