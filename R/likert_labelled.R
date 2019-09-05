@@ -1,9 +1,7 @@
 
 
-
-
 likert_labelled <- function(ds, mid_level, ranked_levels, group,
-                           label_minimum = 0.03, group_arrange = 'positive') {
+                            label_minimum = 0.03, group_arrange = 'positive') {
 
   #' Produces likert plots with labels
   #'
@@ -46,8 +44,8 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
   }
 
   group_order <- ds %>% arrange(sum_for_rank) %>% pull(!!group)
-  ds_upper[ , group] = factor(ds_upper[ , group], levels = group_order)
-  ds_lower[ , group] = factor(ds_lower[ , group], levels = group_order)
+  ds_upper[ , group] <- factor(ds_upper[ , group], levels = group_order)
+  ds_lower[ , group] <- factor(ds_lower[ , group], levels = group_order)
 
   names_lower_levels <- colnames(ds[ ,lower_levels])
   names_upper_levels <- colnames(ds[ ,upper_levels])
@@ -67,18 +65,18 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
     mutate_at(vars(value), funs_(lag_functions)) %>%
     ungroup() %>%
     mutate(pos  = value/2 + rowSums(select(., contains("lag")))) %>%
-    mutate(pos = ifelse(variable == 'Almost.the.same', 0, pos))
+    mutate(pos = ifelse(variable == mid_level, 0, pos))
 
 
   ds_labels_lower <-  ds_lower %>% arrange(desc(variable)) %>% group_by(!!sym(group))  %>%
     mutate_at(vars(value), funs_(lag_functions)) %>%
     ungroup() %>%
     mutate(pos  = 0 - (value/2 + rowSums(select(., contains("lag"))))) %>%
-    mutate(pos = ifelse(variable == 'Almost.the.same', 0, pos))
+    mutate(pos = ifelse(variable == mid_level, 0, pos))
 
 
   ds_labels <- rbind(ds_labels_lower, ds_labels_upper) %>% distinct() %>%
-    mutate(value = ifelse(variable == 'Almost.the.same', value*2, value)) %>%
+    mutate(value = ifelse(variable == mid_level, value*2, value)) %>%
     filter(value >= label_minimum)
 
 
@@ -95,15 +93,15 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
     geom_bar(data = ds_lower, aes(x = !!sym(group), y = -value, fill = variable),
              position="stack", stat="identity") +
     geom_bar(data = ds_upper, aes(x = !!sym(group), y = value, fill = variable),
-            position="stack", stat="identity") +
+             position="stack", stat="identity") +
     coord_flip() + theme_fivethirtyeight() +
     geom_hline(yintercept = 0, color =c("white"))  +
     scale_fill_manual(values = likert_pal,
                       breaks = ranked_levels,
                       name = '') +
-    geom_text(aes(label =  sprintf("%.2f", value), x = !!sym(group), y = pos), data = ds_labels); g
+    geom_text(aes(label =  sprintf("%.2f", value), x = !!sym(group), y = pos), data = ds_labels)
 
-return(g)
+  return(g)
 }
 
 
