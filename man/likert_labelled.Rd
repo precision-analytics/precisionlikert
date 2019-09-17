@@ -5,7 +5,8 @@
 \title{Produces likert plots with labels}
 \usage{
 likert_labelled(ds, mid_level, ranked_levels, group,
-  label_minimum = 0.05, group_arrange = "positive")
+  label_minimum = 0.05, group_arrange = "positive",
+  cat_neutral = TRUE)
 }
 \arguments{
 \item{ds}{a datafarme with groups as rows and levels as columns}
@@ -18,18 +19,20 @@ likert_labelled(ds, mid_level, ranked_levels, group,
 
 \item{group_arrange}{a character of positive (default) or negative}
 
+\item{cat_neutral}{default TRUE but if FALSE then there is no true neutral category; mid_level specifies where alignment will happen}
+
 \item{mid_ldevel}{the neutral or middle category}
 }
 \value{
 None
 }
 \description{
-The one main function for the \code{\link{precisionlikert}} package.
+The main function for the \code{\link{precisionlikert}} package.
 }
 \examples{
 data("country_outlook")
 ranked_levels <- factor(x = c('Much.worse', 'Somewhat.worse', 'Almost.the.same', 'Somewhat.better', 'Much.better'), levels = c('Much.worse', 'Somewhat.worse', 'Almost.the.same', 'Somewhat.better', 'Much.better'))
 mid_level <- 'Almost.the.same'
-group <- 'Country'
-likert_labeled(ds, mid_level, ranked_levels, group)
+group <- "Country"
+likert_labelled(ds, mid_level, ranked_levels, group)
 }
