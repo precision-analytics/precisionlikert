@@ -2,7 +2,7 @@
 
 likert_labelled <- function(ds, mid_level, ranked_levels, group,
                             label_minimum = 0.05, group_arrange = 'positive',
-                            cat_neutral = TRUE) {
+                            cat_neutral = TRUE, interactive = FALSE) {
 
   #' Produces likert plots with labels
   #'
@@ -115,7 +115,40 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
 
   #---------- Produce the plot ----------#
 
-      g <- ggplot() +
+  if (interactive) {
+    g1 <- plot_ly(type = "bar", data = ds_lower, x = ~-value, y = ~get(group), color = ~fct_rev(variable),
+                  colors = likert_pal, orientation = "h", legendgroup = ~variable,
+                  text = sprintf("%s: %s <br>Level: %s <br>Proportion: %.2f",
+                                 group,
+                                 ds_labels_lower[[group]],
+                                 ds_labels_lower$variable,
+                                 ds_labels_lower$value),
+                  hoverinfo = "text") %>%
+      layout(barmode = "stack",
+             xaxis = list(title = ""))
+
+    g2 <- plot_ly(type = "bar", data = ds_upper, x = ~value, y = ~get(group), color = ~fct_rev(variable),
+                  colors = likert_pal, orientation = "h", legendgroup = ~variable,
+                  text = sprintf("%s: %s <br>Level: %s <br>Proportion: %.2f",
+                                 group,
+                                 ds_labels_upper[[group]],
+                                 ds_labels_upper$variable,
+                                 ds_labels_upper$value),
+                  hoverinfo = "text") %>%
+      layout(barmode = "stack",
+             legend = list(orientation = "h"),
+             xaxis = list(title = "",
+                          zeroline = FALSE))
+
+
+
+    g <- subplot(g1, g2, shareY = TRUE, shareX = TRUE, margin = 0) %>%
+      layout(yaxis = list(title = ""))
+  }
+
+
+  if (!interactive) {
+    g <- ggplot() +
       geom_bar(data = ds_lower, aes(x = get(group), y = -value, fill = variable),
                position = "stack", stat = "identity") +
       geom_bar(data = ds_upper, aes(x = get(group), y = value, fill = variable),
@@ -129,6 +162,7 @@ likert_labelled <- function(ds, mid_level, ranked_levels, group,
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank()) +
       labs(x = "", y = "")
+  }
 
   return(g)
 
